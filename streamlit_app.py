@@ -462,7 +462,6 @@ st.markdown("""
 
 st.title("Dashboard Analisis: LDA + IndoBERT + NRS (Per Topik) & Evaluasi LSTM")
 st.caption("Ahmad Abror 2043221003.")
-)
 
 tab_manual, tab_upload, tab_eval, tab_diag = st.tabs([
     "📝 Input Manual",
