@@ -21,6 +21,10 @@ from Sastrawi.StopWordRemover.StopWordRemoverFactory import StopWordRemoverFacto
 
 from sklearn.metrics import confusion_matrix, accuracy_score
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+def p(*paths):
+    return os.path.join(BASE_DIR, *paths)
 
 # =========================================================
 # ENV safe for deploy
@@ -72,6 +76,20 @@ def ensure_nltk() -> Tuple[bool, str]:
 # =========================================================
 STOPWORD_PATH = "stopwordbahasa.txt"
 LDA_COHERENCE_PATH = "lda_coherence.json"  # optional, recommended
+
+# LDA
+lda_files = [p("lda_model.gensim"), p("lda_model.gensim.expElogbeta.npy"), p("lda_dictionary.gensim")]
+lda_model = gensim.models.LdaMulticore.load(p("lda_model.gensim"))
+dictionary = corpora.Dictionary.load(p("lda_dictionary.gensim"))
+
+# LSTM
+lstm_topic_model = load_model(p("lstm_topic_model.h5"))
+tokenizer_topic = load_pickled(p("tokenizer_topic.pkl"))
+label_encoder_topic = load_pickled(p("label_encoder_topic.pkl"))
+
+lstm_sentiment_model = load_model(p("lstm_sentiment_model.h5"))
+tokenizer_sentiment = load_pickled(p("tokenizer_sentiment.pkl"))
+label_encoder_sentiment = load_pickled(p("label_encoder_sentiment.pkl"))
 
 stop_factory = StopWordRemoverFactory()
 stemmer = StemmerFactory().create_stemmer()
