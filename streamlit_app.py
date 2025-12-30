@@ -421,11 +421,47 @@ def render_result_compact(topik_lda: str, sent_ib: str, nrs_value, notes: str = 
 # =========================================================
 # UI
 # =========================================================
+# =========================================================
+# UI
+# =========================================================
 st.set_page_config(page_title="Analisis Topik & Sentimen", layout="wide")
 
+# ✅ 1) TEMPel CSS di sini (setelah set_page_config, sebelum title)
+st.markdown("""
+<style>
+/* teks kecil untuk label */
+.small-note { font-size: 0.85rem; color: #6b7280; }
+
+/* kartu hasil */
+.result-card {
+    background-color: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 10px 12px;
+    text-align: center;
+}
+
+/* judul kecil di kartu */
+.result-title {
+    font-size: 0.72rem;
+    color: #6b7280;
+    margin-bottom: 2px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+}
+
+/* nilai hasil */
+.result-value {
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: #111827;
+}
+</style>
+""", unsafe_allow_html=True)
+
 st.title("Dashboard Analisis: LDA + IndoBERT + NRS (Per Topik) & Evaluasi LSTM")
-st.caption(
-    "Ahmad Abror 2043221003."
+st.caption("Ahmad Abror 2043221003.")
 )
 
 tab_manual, tab_upload, tab_eval, tab_diag = st.tabs([
@@ -470,17 +506,50 @@ with tab_manual:
             # LSTM predictions
             lstm_out = lstm_predict_single(manual_text, res)
 
-            st.subheader("✅ Hasil")
-            c1, c2, c3, c4 = st.columns(4)
-            c1.metric("Topik LDA", str(topic_lda))
-            c2.metric("Sentimen IndoBERT", str(sent_ib))
-            c3.metric("Topik LSTM", lstm_out["lstm_topic"])
-            c4.metric("Sentimen LSTM", lstm_out["lstm_sentiment"])
+           st.markdown("### ✅ Hasil Analisis")
+
+c1, c2, c3, c4 = st.columns(4, gap="medium")
+
+with c1:
+    st.markdown(f"""
+    <div class="result-card">
+        <div class="result-title">Topik LDA</div>
+        <div class="result-value">{topic_lda}</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+with c2:
+    st.markdown(f"""
+    <div class="result-card">
+        <div class="result-title">Sentimen IndoBERT</div>
+        <div class="result-value">{sent_ib}</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+with c3:
+    st.markdown(f"""
+    <div class="result-card">
+        <div class="result-title">Topik LSTM</div>
+        <div class="result-value">{lstm_out["lstm_topic"]}</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+with c4:
+    st.markdown(f"""
+    <div class="result-card">
+        <div class="result-title">Sentimen LSTM</div>
+        <div class="result-value">{lstm_out["lstm_sentiment"]}</div>
+    </div>
+    """, unsafe_allow_html=True)
+
 
             if show_pre:
                 with st.expander("🔎 Detail preprocessing"):
-                    st.write("cleaned:", cleaned)
-                    st.write("text_lda:", text_lda)
+                     st.markdown('<div class="small-note">Cleaned Text</div>', unsafe_allow_html=True)
+                     st.code(cleaned)
+
+                     st.markdown('<div class="small-note">Text untuk LDA</div>', unsafe_allow_html=True)
+                     st.code(text_lda)
 
 
 with tab_diag:
