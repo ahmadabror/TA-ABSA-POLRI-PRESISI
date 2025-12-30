@@ -368,6 +368,31 @@ def evaluate_lstm(df: pd.DataFrame, text_col: str, true_topic_col: str, true_sen
         "cm_topic": cm_topic,
         "cm_sent": cm_sent,
     }
+def lstm_predict_single(text_raw: str, res: Dict) -> Dict[str, str]:
+    sw = res["stop_words"]
+    cleaned = preprocess_text(text_raw)
+    text_lda = preprocess_text_lda(cleaned, sw)
+
+    # topic pred
+    seq_topic = res["tokenizer_topic"].texts_to_sequences([text_lda])
+    pad_topic = pad_sequences(seq_topic, maxlen=MAXLEN_TOPIC, padding="post", truncating="post")
+    pred_topic_probs = res["lstm_topic_model"].predict(pad_topic, verbose=0)
+    pred_topic_idx = int(np.argmax(pred_topic_probs, axis=1)[0])
+    pred_topic_lbl = res["label_encoder_topic"].inverse_transform([pred_topic_idx])[0]
+
+    # sentiment pred
+    seq_sent = res["tokenizer_sentiment"].texts_to_sequences([text_lda])
+    pad_sent = pad_sequences(seq_sent, maxlen=MAXLEN_SENTIMENT, padding="post", truncating="post")
+    pred_sent_probs = res["lstm_sentiment_model"].predict(pad_sent, verbose=0)
+    pred_sent_idx = int(np.argmax(pred_sent_probs, axis=1)[0])
+    pred_sent_lbl = res["label_encoder_sentiment"].inverse_transform([pred_sent_idx])[0]
+
+    return {
+        "cleaned": cleaned,
+        "text_lda": text_lda,
+        "lstm_topic": str(pred_topic_lbl),
+        "lstm_sentiment": str(pred_sent_lbl),
+    }
 
 
 # =========================================================
@@ -403,7 +428,59 @@ st.caption(
     "Ahmad Abror 2043221003."
 )
 
-tab_upload, tab_eval, tab_diag = st.tabs(["📄 Upload & Output", "🧪 Evaluasi LSTM", "🛠 Diagnostik"])
+tab_manual, tab_upload, tab_eval, tab_diag = st.tabs([
+    "📝 Input Manual",
+    "📤 Upload File",
+    "🧪 Evaluasi LSTM",
+    "🛠️ Diagnostik"
+])
+
+with tab_manual:
+    st.header("📝 Input Manual")
+    st.caption("Masukkan 1 teks, lalu sistem akan mengeluarkan Topik LDA, Sentimen IndoBERT, dan prediksi Topik+Sentimen dari LSTM.")
+
+    use_indobert_manual = st.toggle("Gunakan IndoBERT untuk Sentimen", value=True, key="use_indobert_manual")
+    manual_text = st.text_area("Masukkan teks/ulasan", height=180, placeholder="Contoh: Programnya bagus tapi pelayanannya lama...")
+
+    colA, colB = st.columns([1, 2])
+    with colA:
+        run_manual = st.button("🚀 Analisis", type="primary", key="run_manual")
+    with colB:
+        show_pre = st.checkbox("Tampilkan preprocessing", value=False)
+
+    if run_manual:
+        if not manual_text.strip():
+            st.warning("Teks masih kosong.")
+        else:
+            with st.spinner("Loading resources..."):
+                res = get_resources(load_indobert=use_indobert_manual)
+
+            cleaned = preprocess_text(manual_text)
+            text_lda = preprocess_text_lda(cleaned, res["stop_words"])
+
+            # LDA topic
+            topic_lda = lda_topic_from_text(text_lda, res["lda_model"], res["dictionary"])
+
+            # IndoBERT sentiment (optional)
+            if use_indobert_manual and res.get("indobert_pipe") is not None:
+                sent_ib = indobert_sentiment(cleaned, res["indobert_pipe"])
+            else:
+                sent_ib = "neutral"
+
+            # LSTM predictions
+            lstm_out = lstm_predict_single(manual_text, res)
+
+            st.subheader("✅ Hasil")
+            c1, c2, c3, c4 = st.columns(4)
+            c1.metric("Topik LDA", str(topic_lda))
+            c2.metric("Sentimen IndoBERT", str(sent_ib))
+            c3.metric("Topik LSTM", lstm_out["lstm_topic"])
+            c4.metric("Sentimen LSTM", lstm_out["lstm_sentiment"])
+
+            if show_pre:
+                with st.expander("🔎 Detail preprocessing"):
+                    st.write("cleaned:", cleaned)
+                    st.write("text_lda:", text_lda)
 
 
 with tab_diag:
