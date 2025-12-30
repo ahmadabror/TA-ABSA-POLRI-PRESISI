@@ -504,42 +504,42 @@ with tab_manual:
 
             # LSTM predictions
             lstm_out = lstm_predict_single(manual_text, res)
+                        st.markdown("### ✅ Hasil Analisis")
 
-           st.markdown("### ✅ Hasil Analisis")
+            c1, c2, c3, c4 = st.columns(4, gap="medium")
 
-c1, c2, c3, c4 = st.columns(4, gap="medium")
+            with c1:
+                st.markdown(f"""
+                <div class="result-card">
+                    <div class="result-title">Topik LDA</div>
+                    <div class="result-value">{topic_lda}</div>
+                </div>
+                """, unsafe_allow_html=True)
 
-with c1:
-    st.markdown(f"""
-    <div class="result-card">
-        <div class="result-title">Topik LDA</div>
-        <div class="result-value">{topic_lda}</div>
-    </div>
-    """, unsafe_allow_html=True)
+            with c2:
+                st.markdown(f"""
+                <div class="result-card">
+                    <div class="result-title">Sentimen IndoBERT</div>
+                    <div class="result-value">{sent_ib}</div>
+                </div>
+                """, unsafe_allow_html=True)
 
-with c2:
-    st.markdown(f"""
-    <div class="result-card">
-        <div class="result-title">Sentimen IndoBERT</div>
-        <div class="result-value">{sent_ib}</div>
-    </div>
-    """, unsafe_allow_html=True)
+            with c3:
+                st.markdown(f"""
+                <div class="result-card">
+                    <div class="result-title">Topik LSTM</div>
+                    <div class="result-value">{lstm_out["lstm_topic"]}</div>
+                </div>
+                """, unsafe_allow_html=True)
 
-with c3:
-    st.markdown(f"""
-    <div class="result-card">
-        <div class="result-title">Topik LSTM</div>
-        <div class="result-value">{lstm_out["lstm_topic"]}</div>
-    </div>
-    """, unsafe_allow_html=True)
+            with c4:
+                st.markdown(f"""
+                <div class="result-card">
+                    <div class="result-title">Sentimen LSTM</div>
+                    <div class="result-value">{lstm_out["lstm_sentiment"]}</div>
+                </div>
+                """, unsafe_allow_html=True)
 
-with c4:
-    st.markdown(f"""
-    <div class="result-card">
-        <div class="result-title">Sentimen LSTM</div>
-        <div class="result-value">{lstm_out["lstm_sentiment"]}</div>
-    </div>
-    """, unsafe_allow_html=True)
 
 
             if show_pre:
