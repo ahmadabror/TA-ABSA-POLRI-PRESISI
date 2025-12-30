@@ -25,6 +25,9 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 def p(*paths):
     return os.path.join(BASE_DIR, *paths)
+def load_pickled(path: str):
+    with open(path, "rb") as f:
+        return pickle.load(f)
 
 # =========================================================
 # ENV safe for deploy
@@ -76,20 +79,6 @@ def ensure_nltk() -> Tuple[bool, str]:
 # =========================================================
 STOPWORD_PATH = "stopwordbahasa.txt"
 LDA_COHERENCE_PATH = "lda_coherence.json"  # optional, recommended
-
-# LDA
-lda_files = [p("lda_model.gensim"), p("lda_model.gensim.expElogbeta.npy"), p("lda_dictionary.gensim")]
-lda_model = gensim.models.LdaMulticore.load(p("lda_model.gensim"))
-dictionary = corpora.Dictionary.load(p("lda_dictionary.gensim"))
-
-# LSTM
-lstm_topic_model = load_model(p("lstm_topic_model.h5"))
-tokenizer_topic = load_pickled(p("tokenizer_topic.pkl"))
-label_encoder_topic = load_pickled(p("label_encoder_topic.pkl"))
-
-lstm_sentiment_model = load_model(p("lstm_sentiment_model.h5"))
-tokenizer_sentiment = load_pickled(p("tokenizer_sentiment.pkl"))
-label_encoder_sentiment = load_pickled(p("label_encoder_sentiment.pkl"))
 
 stop_factory = StopWordRemoverFactory()
 stemmer = StemmerFactory().create_stemmer()
@@ -256,27 +245,37 @@ def get_resources(load_indobert: bool):
 
     stop_words = build_stopwords()
 
-    # LDA optional
+    # --- LDA optional ---
     lda_model = None
     dictionary = None
-    lda_files = ["lda_model.gensim", "lda_model.gensim.expElogbeta.npy", "lda_dictionary.gensim"]
-    if all(os.path.exists(p) for p in lda_files):
+    lda_files = [p("lda_model.gensim"), p("lda_model.gensim.expElogbeta.npy"), p("lda_dictionary.gensim")]
+    if all(os.path.exists(x) for x in lda_files):
         try:
-            lda_model = gensim.models.LdaMulticore.load("lda_model.gensim")
-            dictionary = corpora.Dictionary.load("lda_dictionary.gensim")
+            lda_model = gensim.models.LdaMulticore.load(p("lda_model.gensim"))
+            dictionary = corpora.Dictionary.load(p("lda_dictionary.gensim"))
         except Exception:
             lda_model, dictionary = None, None
 
-    # LSTM required for evaluation
-    lstm_topic_model = load_model("lstm_topic_model.h5")
-    tokenizer_topic = load_pickled("tokenizer_topic.pkl")
-    label_encoder_topic = load_pickled("label_encoder_topic.pkl")
+    # --- LSTM required (tapi jangan bikin app langsung mati kalau gagal) ---
+    lstm_error = ""
+    try:
+        lstm_topic_model = load_model(p("lstm_topic_model.h5"))
+        tokenizer_topic = load_pickled(p("tokenizer_topic.pkl"))
+        label_encoder_topic = load_pickled(p("label_encoder_topic.pkl"))
 
-    lstm_sentiment_model = load_model("lstm_sentiment_model.h5")
-    tokenizer_sentiment = load_pickled("tokenizer_sentiment.pkl")
-    label_encoder_sentiment = load_pickled("label_encoder_sentiment.pkl")
+        lstm_sentiment_model = load_model(p("lstm_sentiment_model.h5"))
+        tokenizer_sentiment = load_pickled(p("tokenizer_sentiment.pkl"))
+        label_encoder_sentiment = load_pickled(p("label_encoder_sentiment.pkl"))
+    except Exception as e:
+        lstm_error = str(e)
+        lstm_topic_model = None
+        tokenizer_topic = None
+        label_encoder_topic = None
+        lstm_sentiment_model = None
+        tokenizer_sentiment = None
+        label_encoder_sentiment = None
 
-    # IndoBERT optional
+    # --- IndoBERT optional ---
     indobert_pipe = None
     indobert_error = ""
     if load_indobert:
@@ -299,12 +298,17 @@ def get_resources(load_indobert: bool):
         "stop_words": stop_words,
         "lda_model": lda_model,
         "dictionary": dictionary,
+
         "lstm_topic_model": lstm_topic_model,
         "tokenizer_topic": tokenizer_topic,
         "label_encoder_topic": label_encoder_topic,
+
         "lstm_sentiment_model": lstm_sentiment_model,
         "tokenizer_sentiment": tokenizer_sentiment,
         "label_encoder_sentiment": label_encoder_sentiment,
+
+        "lstm_error": lstm_error,
+
         "indobert_pipe": indobert_pipe,
         "indobert_error": indobert_error,
     }
