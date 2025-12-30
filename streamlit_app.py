@@ -155,10 +155,10 @@ def tokenize_for_coherence(cleaned_text: str, stop_words: set) -> List[str]:
 # LDA topic naming
 # =========================================================
 topic_name_map_lda = {
-    0: "Kemudahan Pengurusan SKCK & Manfaat Aplikasi Polri",
-    1: "Efisiensi Pendaftaran Online & Bantuan",
-    2: "Isu Teknis, Error & Kendala Penggunaan Aplikasi",
-    3: "Kepuasan Layanan Aplikasi & Akses Cepat",
+    0: "Pengurusan SKCK",
+    1: "Efisiensi Pendaftaran",
+    2: "Isu Teknis",
+    3: "Kepuasan Layanan",
 }
 
 
