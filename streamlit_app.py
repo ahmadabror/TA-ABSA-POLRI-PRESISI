@@ -504,7 +504,8 @@ with tab_manual:
 
             # LSTM predictions
             lstm_out = lstm_predict_single(manual_text, res)
-                        st.markdown("### ✅ Hasil Analisis")
+            
+            st.markdown("### ✅ Hasil Analisis")
 
             c1, c2, c3, c4 = st.columns(4, gap="medium")
 
